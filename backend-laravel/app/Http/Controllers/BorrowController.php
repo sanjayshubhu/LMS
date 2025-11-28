@@ -2,43 +2,33 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Borrowrecord;
+use App\Models\Book;
 use Illuminate\Http\Request;
 
 class BorrowController extends Controller
 {
-   class BorrowController extends Controller
-{
     public function index() {
-        return BorrowRecord::with('book', 'user')->get();
+        return Borrowrecord::with('book')->where('user_id', auth()->id())->get();
     }
 
-    public function borrow(Request $request, Book $book) {
-        if ($book->quantity <= 0)
-            return response()->json(['message' => 'Not available'], 400);
+    public function borrow(Book $book) {
+        if($book->quantity <= 0) return response()->json(['error'=>'No copies available'],400);
 
-        $record = BorrowRecord::create([
-            'user_id' => auth()->id(),
-            'book_id' => $book->id,
-            'borrow_date' => now(),
+        Borrowrecord::create([
+            'user_id'=>auth()->id(),
+            'book_id'=>$book->id
         ]);
 
         $book->decrement('quantity');
-
-        return $record;
+        return response()->json(['message'=>'Book borrowed']);
     }
 
-    public function returnBook($id) {
-        $record = BorrowRecord::findOrFail($id);
+    public function returnBook(Borrowrecord $borrow) {
+        if($borrow->user_id !== auth()->id()) return response()->json(['error'=>'Not allowed'],403);
 
-        $record->update([
-            'return_date' => now(),
-            'status' => 'returned'
-        ]);
-
-        $record->book->increment('quantity');
-
-        return $record;
+        $borrow->update(['returned'=>true]);
+        $borrow->book->increment('quantity');
+        return response()->json(['message'=>'Book returned']);
     }
-}
-
 }

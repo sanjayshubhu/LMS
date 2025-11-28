@@ -4,62 +4,52 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        $data = $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:6',
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6',
         ]);
 
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+        User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
         ]);
-        return response()->json([
-            'message' => 'User registered successfully',
-            'user'    => $user
-        ], 201);
+
+        return response()->json(['message' => 'User registered']);
     }
 
-    //  Login method
     public function login(Request $request)
     {
-        $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required|string',
-        ]);
+        $credentials = $request->only('email', 'password');
 
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'message' => 'Invalid credentials'
-            ], 401);
+        // Use JWT guard
+        if (!$token = auth('api')->attempt($credentials)) {
+            return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
-        // Log the user in using Laravel Auth
-        Auth::login($user);
-
         return response()->json([
-            'message' => 'Logged in successfully',
-            'user'    => $user
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => auth('api')->factory()->getTTL() * 60
         ]);
     }
 
-
-    public function logout(Request $request)
+    public function logout()
     {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
+        auth()->logout();
         return response()->json(['message' => 'Logged out']);
+    }
+
+    public function me()
+    {
+        return response()->json(auth()->user());
     }
 }
