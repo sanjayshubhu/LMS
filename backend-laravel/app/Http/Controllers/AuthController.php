@@ -1,55 +1,61 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
+    public function showRegister() {
+        return view('auth.register');
+    }
+
+    public function showLogin() {
+        return view('auth.login');
+    }
+
+    public function register(Request $request) {
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:6',
+            'role' => 'required|in:user,admin' // optional if you want role selection during registration
         ]);
 
         User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => $request->role ?? 'user', // default to 'user'
         ]);
 
-        return response()->json(['message' => 'User registered']);
+        return redirect()->route('login.view')->with('success','Registered successfully');
     }
 
-    public function login(Request $request)
-    {
-        $credentials = $request->only('email', 'password');
+    public function login(Request $request) {
+        $credentials = $request->only('email','password');
 
-        // Use JWT guard
-        if (!$token = auth('api')->attempt($credentials)) {
-            return response()->json(['error' => 'Invalid credentials'], 401);
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+
+           
+            // Redirect based on role
+        if (auth()->user()->role === 'admin') {
+            return redirect()->route('admin.dashboard')->with('success', 'Welcome Admin!');
+        } else {
+            return redirect()->route('user.dashboard')->with('success', 'Welcome User!');
+        }
         }
 
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60
-        ]);
+        return redirect()->back()->with('error','Invalid credentials');
     }
 
-    public function logout()
-    {
-        auth()->logout();
-        return response()->json(['message' => 'Logged out']);
-    }
-
-    public function me()
-    {
-        return response()->json(auth()->user());
+    public function logout(Request $request) {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect()->route('login.view');
     }
 }

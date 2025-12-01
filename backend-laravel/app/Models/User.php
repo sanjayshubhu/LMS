@@ -8,9 +8,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
-use Tymon\JWTAuth\Contracts\Providers\JWT;
 
-class User extends Authenticatable implements JWT
+
+class User extends Authenticatable implements JWTSubject
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens;
@@ -60,6 +60,6 @@ class User extends Authenticatable implements JWT
     }
     public function borrow()
     {
-        return $this->belongsTo(Borrowrecord::class, 'user_id', 'id');
+        return $this->hasMany(Borrowrecord::class, 'user_id', 'id');
     }
 }
