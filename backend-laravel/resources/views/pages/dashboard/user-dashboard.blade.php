@@ -34,14 +34,16 @@
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-gray-800 font-medium">{{ $record->book->title }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                            {{ $record->status == 'returned' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
-                                            {{ ucfirst($record->status) }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-gray-600">{{ $record->borrowed_at->format('d M Y') }}</td>
+                                                <span
+                                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                                     {{ $record->return_date ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                                    {{ $record->return_date ? 'Returned' : ucfirst($record->status) }}
+                                                </span>
+                                            </td>
+
+                                    <td class="px-6 py-4 whitespace-nowrap text-gray-600">{{ $record->borrow_date?->format('d M Y') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-gray-600">
-                                        {{ $record->returned_at ? $record->returned_at->format('d M Y') : 'Not returned yet' }}
+                                        {{ $record->return_date ? $record->return_date?->format('d M Y') : 'Not returned yet' }}
                                     </td>
                                 </tr>
                                 @endforeach

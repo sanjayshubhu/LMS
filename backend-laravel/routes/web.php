@@ -1,10 +1,12 @@
 <?php
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BookController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 
 
 Route::get('/', function () {
@@ -40,14 +42,36 @@ Route::middleware(['auth'])->group(function () {
 
 // Admin Dashboard
 Route::middleware(['auth', 'admin'])->group(function () {
-    Route::get('/admin-dashboard', [AdminController::class, 'dashboard'])->middleware(['auth', 'admin'])->name('admin.dashboard');
-    Route::get('/books/{book}/edit', [BookController::class, 'edit'])->name('books.edit');
+    Route::get('/admin-dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+
+    // Books routes
+    Route::resource('books', BookController::class)->except(['edit']);
     Route::put('/books/{book}', [BookController::class, 'update'])->name('books.update');
     Route::delete('/books/{book}', [BookController::class, 'destroy'])->name('books.destroy');
     Route::get('/books', [BookController::class, 'index'])->name('books.index');
-    
 
+    // Users routes
+    Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('users.destroy');
+    Route::get('/users', [AdminController::class, 'users'])->name('users.index'); // list all users
 });
+
+// Forgot Password
+Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])
+    ->name('password.request');
+
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])
+    ->name('password.email');
+
+// Reset Password
+Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])
+    ->name('password.reset');
+
+Route::post('/reset-password', [ResetPasswordController::class, 'reset'])
+    ->name('password.update');
+
+
+    // routes/web.php
+Route::patch('/admin/books/{id}/return', [BookController::class, 'markReturn'])->name('admin.books.markReturn');
 
 
 Route::get('/test-admin', function () {

@@ -10,7 +10,7 @@ class BorrowController extends Controller
 {
     public function index()
     {
-        return Borrowrecord::with('book')->where('user_id', auth()->id())->get();
+        return Borrowrecord::with('book')->where('user_id', auth()->id())->paginate(10);
     }
 
     public function borrow(Book $book)

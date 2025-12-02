@@ -79,36 +79,48 @@ class BookController extends Controller
         return redirect()->back()->with('success', 'Book returned');
     }
 //Update books
-    public function edit(Book $book)
-{
-    return view('pages.books.edit', compact('book'));
-}
+
 
 public function update(Request $request, Book $book)
 {
     $request->validate([
-        'title'     => 'required|string|max:255',
-        'author'    => 'required|string|max:255',
-        'category'  => 'required|string|max:255',
-        'isbn'      => 'required|string|unique:books,isbn,' . $book->id,
-        'quantity'  => 'required|integer|min:1',
+        'title' => 'required|string|max:255',
+        'author' => 'required|string|max:255',
+        'category' => 'required|string|max:255',
+        'isbn' => 'required|string|unique:books,isbn,' . $book->id,
+        'quantity' => 'required|integer|min:1',
     ]);
 
-    $book->update([
-        'title'    => $request->title,
-        'author'   => $request->author,
-        'category' => $request->category,
-        'isbn'     => $request->isbn,
-        'quantity' => $request->quantity,
-    ]);
+    $book->update($request->only(['title','author','category','isbn','quantity']));
+
+    // Return JSON for AJAX
+    if ($request->expectsJson()) {
+        return response()->json($book);
+    }
 
     return redirect()->route('admin.dashboard')->with('success', 'Book updated successfully');
 }
+
+
 //Delete books 
 public function destroy(Book $book)
 {
     $book->delete();
     return redirect()->route('admin.dashboard')->with('success', 'Book deleted successfully');
 }
+
+//Return books
+public function markReturn(Request $request, $id)
+{
+    $record = Borrowrecord::findOrFail($id);
+    $record->return_date = now();
+    $record->save();
+
+    return response()->json([
+        'success' => true,
+        'return_date' => $record->return_date->format('d M Y')
+    ]);
+}
+
 
 }
