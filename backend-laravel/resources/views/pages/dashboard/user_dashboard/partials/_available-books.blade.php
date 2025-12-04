@@ -1,6 +1,6 @@
 <div class="bg-white shadow-md rounded-lg overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-        <h2 class="text-2xl font-semibold text-gray-800">Available Books</h2>
+        <h2 class="text-2xl font-semibold text-gray-800">available Books</h2>
         <input type="text" id="searchBook" placeholder="Search books..."
                class="border px-3 py-2 rounded w-64 focus:outline-none focus:ring-2 focus:ring-blue-400">
     </div>

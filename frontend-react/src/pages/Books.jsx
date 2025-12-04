@@ -5,7 +5,19 @@ export default function Books() {
   const [books, setBooks] = useState([]);
 
   useEffect(() => {
-    axios.get("/api/books").then(res => setBooks(res.data));
+    const fetchBooks = async () => {
+      try {
+        const token = localStorage.getItem("token"); // JWT stored after login
+        const res = await axios.get("/api/books", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setBooks(res.data);
+      } catch (err) {
+        console.error("Failed to fetch books:", err);
+      }
+    };
+
+    fetchBooks();
   }, []);
 
   return (
@@ -13,7 +25,11 @@ export default function Books() {
       <h3>Books</h3>
       <table className="table table-bordered">
         <thead>
-          <tr><th>Title</th><th>Author</th><th>Qty</th></tr>
+          <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Qty</th>
+          </tr>
         </thead>
         <tbody>
           {books.map(b => (

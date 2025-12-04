@@ -1,52 +1,48 @@
-import { useState } from "react";
-import axios from "../api/axios";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import axios from "../api/axios.js";
 
-export default function Login({ setLoggedIn }) {
+export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState("");
-  const navigate = useNavigate();
+
+  // Set token from localStorage on component mount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    }
+  }, []);
 
   const login = async (e) => {
     e.preventDefault();
-    setErrors(""); // reset errors
-
     try {
-      // Get CSRF cookie first
-      await axios.get("/sanctum/csrf-cookie");
+      const res = await axios.post("/api/login", { email, password });
 
-      // Attempt login
-      await axios.post("/api/login", { email, password });
+      // Correct key from Laravel JWT response
+      const token = res.data.access_token;
 
-      // Success: update logged in state and redirect
-      setLoggedIn(true);
-      navigate("/"); // redirect to home/dashboard
+      if (!token) throw new Error("Token not received");
+
+      // Store token in localStorage
+      localStorage.setItem("token", token);
+
+      // Set default Authorization header for all future requests
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+      // Fetch logged-in user
+      const userRes = await axios.get("/api/me");
+      console.log("Logged in user:", userRes.data);
+
+      alert("Logged in successfully!");
     } catch (err) {
-      // Laravel returns validation errors in err.response.data.errors
-      if (err.response) {
-        if (err.response.status === 422) {
-          // Validation errors
-          const messages = Object.values(err.response.data.errors)
-            .flat()
-            .join(" ");
-          setErrors(messages);
-        } else if (err.response.status === 401) {
-          // Wrong credentials
-          setErrors("Incorrect email or password");
-        } else {
-          setErrors("Login failed. Please try again.");
-        }
-      } else {
-        setErrors("Network error. Please try again.");
-      }
+      console.error(err);
+      alert("Login failed");
     }
   };
 
   return (
     <div className="container mt-4 col-md-4">
       <h3>Login</h3>
-      {errors && <div className="alert alert-danger">{errors}</div>}
       <form onSubmit={login}>
         <input
           type="email"
@@ -54,7 +50,6 @@ export default function Login({ setLoggedIn }) {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          required
         />
         <input
           type="password"
@@ -62,9 +57,10 @@ export default function Login({ setLoggedIn }) {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          required
         />
-        <button className="btn btn-primary w-100">Login</button>
+        <button type="submit" className="btn btn-primary w-100">
+          Login
+        </button>
       </form>
     </div>
   );
