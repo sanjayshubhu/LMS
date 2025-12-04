@@ -15,6 +15,6 @@ class UserController extends Controller
         // Get all books
         $books = Book::all();
 
-        return view('pages.dashboard.user-dashboard', compact('borrowedBooks','books'));
+        return view('pages.dashboard.user_dashboard.index', compact('borrowedBooks','books'));
     }
 }

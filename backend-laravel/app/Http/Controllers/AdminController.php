@@ -29,6 +29,20 @@ class AdminController extends Controller
         ));
     }
 
+    //Search books
+    public function adminSearch(Request $request)
+    {
+        $query = $request->q ?? '';
+
+        $books = Book::where('title', 'LIKE', "%{$query}%")
+            ->orWhere('author', 'LIKE', "%{$query}%")
+            ->orWhere('category', 'LIKE', "%{$query}%")
+            ->orWhere('isbn', 'LIKE', "%{$query}%")
+            ->get(['id', 'title', 'quantity', 'author', 'category', 'isbn']);
+
+        return response()->json($books);
+    }
+
     public function books()
     {
         // Redirect to dashboard highlighting books tab
@@ -46,13 +60,12 @@ class AdminController extends Controller
     }
     //Delete users
     public function destroyUser(User $user)
-{
-    if(auth()->id() === $user->id){
-        return redirect()->back()->with('error', 'You cannot delete yourself!');
+    {
+        if (auth()->id() === $user->id) {
+            return redirect()->back()->with('error', 'You cannot delete yourself!');
+        }
+
+        $user->delete();
+        return redirect()->back()->with('success', 'User deleted successfully!');
     }
-
-    $user->delete();
-    return redirect()->back()->with('success', 'User deleted successfully!');
-}
-
 }

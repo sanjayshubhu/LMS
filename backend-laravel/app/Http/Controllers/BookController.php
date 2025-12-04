@@ -11,8 +11,17 @@ class BookController extends Controller
 {
     public function index() {
         $books = Book::all();
+        
         return view('pages.books.index', compact('books'));
     }
+
+    public function search(Request $request)
+{
+    $books = Book::where('title', 'LIKE', "%{$request->q}%")->get();
+
+    return response()->json($books);
+}
+
 
     public function create() {
         return view('pages.books.create');

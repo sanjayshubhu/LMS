@@ -13,9 +13,9 @@
 
     <!-- Main Content -->
     <div class="flex-1 p-6">
-        @include('pages.dashboard.admin_dashboard._books')
-        @include('pages.dashboard.admin_dashboard._users')
-        @include('pages.dashboard.admin_dashboard._borrow_records')
+        @include('pages.dashboard.admin_dashboard.partials._books')
+        @include('pages.dashboard.admin_dashboard.partials._users')
+        @include('pages.dashboard.admin_dashboard.partials._borrow_records')
     </div>
 </div>
 <script>
